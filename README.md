@@ -86,14 +86,44 @@ cp .env.example .env
 
 ### Configuración de API Keys
 
-Necesitarás configurar las siguientes API keys en tu archivo `.env`:
+Tienes **3 opciones** de proveedores de IA:
+
+#### **Opción 1: GitHub Models (RECOMENDADO - GRATIS)** ⭐
+
+Si tienes GitHub Copilot, usa modelos premium sin costo:
 
 ```env
-# OpenAI (requerido)
-OPENAI_API_KEY=tu-api-key-aqui
+LLM_PROVIDER=github
+GITHUB_TOKEN=tu-github-token-aqui
+GITHUB_MODEL=gpt-5.1-codex  # Recomendado para desarrollo
+```
 
-# Opcional: para capacidades adicionales
+**Modelos disponibles (Noviembre 2025):**
+- `gpt-5.1-codex`, `gpt-5.1`, `gpt-5-codex`, `gpt-5` - Serie GPT-5
+- `claude-4.5-sonnet`, `claude-4-sonnet` - Serie Claude 4
+- `gpt-4o`, `gpt-4o-mini`, `gpt-4` - Serie GPT-4 (legacy)
+- `claude-3.5-sonnet` - Claude 3.5 (legacy)
+
+**Ver instrucciones completas:** [SETUP_GITHUB_MODELS.md](./SETUP_GITHUB_MODELS.md)
+
+#### **Opción 2: OpenAI**
+
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=tu-api-key-aqui
+OPENAI_MODEL=gpt-5.1-codex
+```
+
+#### **Opción 3: Anthropic Claude**
+
+```env
+LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=tu-api-key-aqui
+ANTHROPIC_MODEL=claude-4.5-sonnet
+```
+
+**Configuración opcional:**
+```env
 SERPER_API_KEY=tu-api-key-aqui  # Para búsquedas web
 ```
 

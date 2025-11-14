@@ -24,21 +24,49 @@ class LLMProvider:
 
 # Available models per provider
 GITHUB_MODELS = {
+    # GPT-5 Series (Latest - November 2025)
+    "gpt-5.1": "openai/gpt-5.1",
+    "gpt-5.1-codex": "openai/gpt-5.1-codex",  # Optimized for code
+    "gpt-5": "openai/gpt-5",
+    "gpt-5-codex": "openai/gpt-5-codex",  # Optimized for code
+    
+    # Claude 4 Series (Latest - November 2025)
+    "claude-4.5-sonnet": "anthropic/claude-4.5-sonnet",  # Most advanced
+    "claude-4-sonnet": "anthropic/claude-4-sonnet",
+    
+    # GPT-4 Series (Legacy but still available)
     "gpt-4o": "openai/gpt-4o",
-    "gpt-4o-mini": "openai/gpt-4o-mini", 
+    "gpt-4o-mini": "openai/gpt-4o-mini",
     "gpt-4": "openai/gpt-4",
+    
+    # Claude 3 Series (Legacy)
     "claude-3.5-sonnet": "anthropic/claude-3.5-sonnet",
+    
+    # Open Source Models
     "llama-3.1-70b": "meta/llama-3.1-70b-instruct",
     "phi-3": "microsoft/phi-3-medium-4k-instruct",
 }
 
 OPENAI_MODELS = {
+    # GPT-5 Series (if using OpenAI directly)
+    "gpt-5.1": "gpt-5.1",
+    "gpt-5.1-codex": "gpt-5.1-codex",
+    "gpt-5": "gpt-5",
+    "gpt-5-codex": "gpt-5-codex",
+    
+    # GPT-4 Series (Legacy)
     "gpt-4-turbo": "gpt-4-turbo-preview",
     "gpt-4": "gpt-4",
+    "gpt-4o": "gpt-4o",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
 }
 
 ANTHROPIC_MODELS = {
+    # Claude 4 Series (Latest)
+    "claude-4.5-sonnet": "claude-4.5-sonnet-20241114",
+    "claude-4-sonnet": "claude-4-sonnet-20241114",
+    
+    # Claude 3 Series (Legacy)
     "claude-3.5-sonnet": "claude-3-5-sonnet-20241022",
     "claude-3-opus": "claude-3-opus-20240229",
     "claude-3-sonnet": "claude-3-sonnet-20240229",
@@ -86,11 +114,11 @@ def get_llm_config(provider: Optional[str] = None, model: Optional[str] = None) 
     # Get model name
     if model is None:
         if provider == LLMProvider.GITHUB:
-            model = os.getenv("GITHUB_MODEL", "gpt-4o")
+            model = os.getenv("GITHUB_MODEL", "gpt-5.1-codex")  # Default to best coding model
         elif provider == LLMProvider.OPENAI:
-            model = os.getenv("OPENAI_MODEL", "gpt-4-turbo")
+            model = os.getenv("OPENAI_MODEL", "gpt-5.1-codex")
         elif provider == LLMProvider.ANTHROPIC:
-            model = os.getenv("ANTHROPIC_MODEL", "claude-3.5-sonnet")
+            model = os.getenv("ANTHROPIC_MODEL", "claude-4.5-sonnet")
     
     # Build configuration
     config = _build_config(provider, model)

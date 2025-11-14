@@ -4,15 +4,25 @@
 
 Ya que tienes **GitHub Copilot Premium**, puedes usar modelos de IA premium **SIN COSTO ADICIONAL**:
 
-- ✅ **GPT-4o** - Modelo más avanzado de OpenAI
-- ✅ **Claude 3.5 Sonnet** - Excelente para código complejo  
-- ✅ **GPT-4o-mini** - Rápido para tareas simples
-- ✅ **Llama 3.1 70B** - Modelo open source potente
-- ✅ **SIN COSTOS** - Incluido en tu suscripción de Copilot
+### **Serie GPT-5 (Noviembre 2025 - Última Generación)**
+- ✅ **GPT-5.1 Codex** ⭐ - Optimizado específicamente para desarrollo de software
+- ✅ **GPT-5.1** - Versión más avanzada de OpenAI
+- ✅ **GPT-5 Codex** - Especializado en generación de código
+- ✅ **GPT-5** - Modelo general más potente
 
-Vs. pagar:
-- OpenAI: ~$2-5 USD por proyecto
-- Anthropic: ~$1-3 USD por proyecto
+### **Serie Claude 4 (Noviembre 2025 - Última Generación)**
+- ✅ **Claude 4.5 Sonnet** ⭐ - Modelo más avanzado de Anthropic
+- ✅ **Claude 4 Sonnet** - Excelente para arquitectura de código
+
+### **Modelos Legacy (Aún disponibles)**
+- ✅ **GPT-4o**, **GPT-4o-mini**, **GPT-4** - Serie GPT-4
+- ✅ **Claude 3.5 Sonnet** - Serie Claude 3
+- ✅ **Llama 3.1 70B**, **Phi-3** - Open source
+
+### **💰 Comparación de Precios:**
+- **GitHub Models**: **GRATIS** (incluido en Copilot)
+- OpenAI directo: ~$3-8 USD por proyecto (GPT-5 es más caro)
+- Anthropic directo: ~$2-5 USD por proyecto
 
 ---
 
@@ -49,11 +59,19 @@ Vs. pagar:
    GITHUB_TOKEN=ghp_tu_token_real_aqui_xxxxxxxxxx
    ```
 
-4. **OPCIONAL**: Elige el modelo que quieres usar (por defecto es gpt-4o):
+4. **OPCIONAL**: Elige el modelo que quieres usar:
    ```env
-   GITHUB_MODEL=gpt-4o          # Recomendado para desarrollo completo
-   # GITHUB_MODEL=claude-3.5-sonnet  # Excelente para código complejo
-   # GITHUB_MODEL=gpt-4o-mini        # Más rápido y liviano
+   # Modelos recomendados para desarrollo de software:
+   GITHUB_MODEL=gpt-5.1-codex          # ⭐ RECOMENDADO - Optimizado para código
+   # GITHUB_MODEL=claude-4.5-sonnet    # Excelente para arquitectura compleja
+   # GITHUB_MODEL=gpt-5.1               # Más avanzado, uso general
+   # GITHUB_MODEL=gpt-5-codex           # Especializado en código
+   # GITHUB_MODEL=claude-4-sonnet       # Claude 4 base
+   
+   # Modelos legacy (aún disponibles):
+   # GITHUB_MODEL=gpt-4o                # GPT-4 optimizado
+   # GITHUB_MODEL=claude-3.5-sonnet     # Claude 3.5
+   # GITHUB_MODEL=gpt-4o-mini           # Rápido y liviano
    ```
 
 5. **Guarda** el archivo `.env`
@@ -71,7 +89,7 @@ Deberías ver:
 ✅ Configuración válida
 
 Provider: GITHUB
-Model: openai/gpt-4o
+Model: openai/gpt-5.1-codex
 💰 Cost: FREE (using GitHub Copilot subscription)
 ```
 
@@ -121,9 +139,19 @@ Sí, GitHub Copilot tiene límites mensuales, pero son generosos:
 ### ¿Puedo cambiar de modelo después?
 
 Sí, solo edita `GITHUB_MODEL` en `.env`:
-- `gpt-4o` - Más inteligente, mejor para proyectos complejos
-- `claude-3.5-sonnet` - Excelente para arquitectura de código
-- `gpt-4o-mini` - Más rápido para cambios pequeños
+
+**Para desarrollo de software (RECOMENDADO):**
+- `gpt-5.1-codex` ⭐ - Mejor para generación de código completo
+- `gpt-5-codex` - Especializado en código
+- `claude-4.5-sonnet` - Excelente para arquitectura y diseño
+
+**Para proyectos complejos:**
+- `gpt-5.1` - Más inteligente, razonamiento avanzado
+- `claude-4.5-sonnet` - Mejor comprensión de contexto
+
+**Para iteraciones rápidas:**
+- `gpt-4o-mini` - Más rápido, menos recursos
+- `gpt-4o` - Balance velocidad/calidad
 
 ### ¿Y si quiero usar OpenAI o Claude directamente?
 

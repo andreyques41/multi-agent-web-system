@@ -63,16 +63,32 @@ Si tienes **GitHub Copilot**, puedes usar modelos premium **SIN COSTO ADICIONAL*
    ```env
    LLM_PROVIDER=github
    GITHUB_TOKEN=ghp_tu_token_aqui
-   GITHUB_MODEL=gpt-4o  # o claude-3.5-sonnet, gpt-4o-mini, etc.
+   GITHUB_MODEL=gpt-5.1-codex  # Recomendado para código
    ```
 
-3. **Modelos disponibles:**
-   - `gpt-4o` - Recomendado para desarrollo completo
-   - `claude-3.5-sonnet` - Excelente para código complejo
-   - `gpt-4o-mini` - Más rápido para tareas simples
+3. **Modelos disponibles (Noviembre 2025):**
+   
+   **Serie GPT-5 (Última generación):**
+   - `gpt-5.1-codex` ⭐ - Optimizado para desarrollo de software (RECOMENDADO)
+   - `gpt-5.1` - Última versión, más avanzado
+   - `gpt-5-codex` - Especializado en código
+   - `gpt-5` - Versión general GPT-5
+   
+   **Serie Claude 4 (Última generación):**
+   - `claude-4.5-sonnet` ⭐ - Más avanzado de Anthropic
+   - `claude-4-sonnet` - Claude 4 base
+   
+   **GPT-4 (Legacy pero disponible):**
+   - `gpt-4o` - GPT-4 optimizado
+   - `gpt-4o-mini` - Versión rápida
    - `gpt-4` - GPT-4 original
-   - `llama-3.1-70b` - Open source potente
-   - `phi-3` - Modelo pequeño de Microsoft
+   
+   **Claude 3 (Legacy):**
+   - `claude-3.5-sonnet` - Claude 3.5
+   
+   **Modelos Open Source:**
+   - `llama-3.1-70b` - Meta Llama
+   - `phi-3` - Microsoft Phi-3
 
 ### **Opción 2: OpenAI** 
 
@@ -85,8 +101,8 @@ Pago por uso (~$2-5 USD por proyecto completo):
 
 ```env
 LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-tu-api-key-aqui
-OPENAI_MODEL=gpt-4-turbo
+OPENAI_API_KEY=sk-tu-key-aqui
+OPENAI_MODEL=gpt-5.1-codex
 ```
 
 ### **Opción 3: Anthropic Claude**
@@ -100,7 +116,7 @@ Pago por uso (~$1-3 USD por proyecto completo - MÁS ECONÓMICO):
 ```env
 LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=sk-ant-tu-api-key-aqui
-ANTHROPIC_MODEL=claude-3.5-sonnet
+ANTHROPIC_MODEL=claude-4.5-sonnet
 ```
 
 ### 🆓 **¿Cuál elegir?**

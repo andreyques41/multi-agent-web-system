@@ -14,7 +14,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
+def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None, model_name: Optional[str] = None) -> Agent:
     """
     Create a Frontend Developer agent specialized in building
     modern, responsive user interfaces.
@@ -22,11 +22,22 @@ def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool 
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
-        llm: Language model to use (if None, will use default from environment)
+        llm: Language model to use (if provided, model_name is ignored)
+        model_name: Specific model to use (e.g., 'gpt-5.1-codex')
         
     Returns:
         Agent: Configured Frontend Developer agent
     """
+    # If no LLM provided, create one with the specified or recommended model
+    if llm is None:
+        from utils.llm_config import get_llm_config, get_best_model_for_agent
+        
+        model = model_name or get_best_model_for_agent('frontend')
+        
+        from langchain_openai import ChatOpenAI
+        llm_config = get_llm_config(model=model)
+        llm = ChatOpenAI(**llm_config)
+    
     agent_config = {
         'role': 'Senior Frontend Developer',
         'goal': 'Create beautiful, responsive, and user-friendly interfaces that work perfectly on all devices',
@@ -68,10 +79,8 @@ def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool 
         'allow_delegation': False,
         'max_iter': 20,
         'memory': True,
+        'llm': llm,
     }
-    
-    if llm is not None:
-        agent_config['llm'] = llm
     
     return Agent(**agent_config)
 

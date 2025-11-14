@@ -13,7 +13,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_business_analyst_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
+def create_business_analyst_agent(tools: Optional[List] = None, verbose: bool = True, llm = None, model_name: Optional[str] = None) -> Agent:
     """
     Create a Business Analyst agent specialized in understanding
     client needs and translating them into technical requirements.
@@ -21,11 +21,23 @@ def create_business_analyst_agent(tools: Optional[List] = None, verbose: bool = 
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
-        llm: Language model to use (if None, will use default from environment)
+        llm: Language model to use (if provided, model_name is ignored)
+        model_name: Specific model to use (e.g., 'claude-4.5-sonnet', 'gpt-5.1')
         
     Returns:
         Agent: Configured Business Analyst agent
     """
+    # If no LLM provided, create one with the specified or recommended model
+    if llm is None:
+        from utils.llm_config import get_llm_config, get_best_model_for_agent
+        
+        # Use specified model, or get the best model for this agent
+        model = model_name or get_best_model_for_agent('business_analyst')
+        
+        from langchain_openai import ChatOpenAI
+        llm_config = get_llm_config(model=model)
+        llm = ChatOpenAI(**llm_config)
+    
     agent_config = {
         'role': 'Business Analyst',
         'goal': 'Understand client needs and translate them into clear, actionable technical requirements for small and medium-sized businesses',
@@ -55,11 +67,8 @@ def create_business_analyst_agent(tools: Optional[List] = None, verbose: bool = 
         'allow_delegation': False,
         'max_iter': 15,
         'memory': True,
+        'llm': llm,  # Always set LLM (created above if not provided)
     }
-    
-    # Add LLM if provided
-    if llm is not None:
-        agent_config['llm'] = llm
     
     return Agent(**agent_config)
 

@@ -245,3 +245,68 @@ def get_provider_info() -> str:
         return info
     except ValueError as e:
         return f"No provider configured: {e}"
+
+
+def get_best_model_for_agent(agent_role: str) -> Optional[str]:
+    """
+    Get the best model for a specific agent role.
+    
+    Different models excel at different tasks:
+    - GPT-5.1-codex: Best for code generation (Backend, Frontend, DevOps)
+    - Claude-4.5-sonnet: Best for architecture and complex reasoning (Business Analyst, PM)
+    - GPT-5.1: Best for general tasks and QA
+    
+    Args:
+        agent_role: Role of the agent (e.g., 'backend', 'frontend', 'business_analyst')
+        
+    Returns:
+        Recommended model name, or None to use default
+        
+    Example:
+        >>> model = get_best_model_for_agent('backend')
+        >>> config = get_llm_config(model=model)
+    """
+    # Check if user has overridden the model for this specific agent
+    env_var = f"{agent_role.upper()}_MODEL"
+    override = os.getenv(env_var)
+    if override:
+        return override
+    
+    # Determine provider to know which models are available
+    provider = os.getenv("LLM_PROVIDER", "").lower()
+    if not provider:
+        if os.getenv("GITHUB_TOKEN"):
+            provider = "github"
+        elif os.getenv("OPENAI_API_KEY"):
+            provider = "openai"
+        elif os.getenv("ANTHROPIC_API_KEY"):
+            provider = "anthropic"
+    
+    # Recommended models per agent role
+    recommendations = {
+        # Code generation tasks - Best with Codex models
+        "backend": "gpt-5.1-codex",       # Heavy code generation
+        "frontend": "gpt-5.1-codex",      # UI/UX code generation
+        "devops": "gpt-5.1-codex",        # Infrastructure as Code
+        
+        # Architecture and reasoning - Best with Claude
+        "business_analyst": "claude-4.5-sonnet",  # Requirements analysis, complex reasoning
+        "project_manager": "claude-4.5-sonnet",   # Planning, documentation
+        
+        # Testing and validation - GPT-5.1 general
+        "qa": "gpt-5.1",                  # Test generation and validation
+    }
+    
+    recommended = recommendations.get(agent_role.lower())
+    
+    # If the recommended model is not available in the current provider, return None (use default)
+    if recommended:
+        if provider == "github" and recommended in GITHUB_MODELS:
+            return recommended
+        elif provider == "openai" and recommended in OPENAI_MODELS:
+            return recommended
+        elif provider == "anthropic" and recommended in ANTHROPIC_MODELS:
+            return recommended
+    
+    # Return None to use the default model from environment
+    return None

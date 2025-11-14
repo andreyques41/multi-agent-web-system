@@ -15,7 +15,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
+def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = True, llm = None, model_name: Optional[str] = None) -> Agent:
     """
     Create a Project Manager agent specialized in coordinating
     multi-agent development teams.
@@ -23,11 +23,22 @@ def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = T
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
-        llm: Language model to use (if None, will use default from environment)
+        llm: Language model to use (if provided, model_name is ignored)
+        model_name: Specific model to use (e.g., 'claude-4.5-sonnet')
         
     Returns:
         Agent: Configured Project Manager agent
     """
+    # If no LLM provided, create one with the specified or recommended model
+    if llm is None:
+        from utils.llm_config import get_llm_config, get_best_model_for_agent
+        
+        model = model_name or get_best_model_for_agent('project_manager')
+        
+        from langchain_openai import ChatOpenAI
+        llm_config = get_llm_config(model=model)
+        llm = ChatOpenAI(**llm_config)
+    
     agent_config = {
         'role': 'Technical Project Manager',
         'goal': 'Coordinate the development team, ensure timely delivery, and maintain clear communication with stakeholders',
@@ -76,10 +87,8 @@ def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = T
         'allow_delegation': True,  # PM can delegate to other agents
         'max_iter': 15,
         'memory': True,
+        'llm': llm,
     }
-    
-    if llm is not None:
-        agent_config['llm'] = llm
     
     return Agent(**agent_config)
 

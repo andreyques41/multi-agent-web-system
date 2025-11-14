@@ -145,7 +145,7 @@ def list_templates():
 
 def check_llm_config():
     """Check and display LLM provider configuration."""
-    from utils.llm_config import get_provider_info, list_available_models
+    from utils.llm_config import get_provider_info, list_available_models, get_best_model_for_agent
     
     print_banner()
     console.print("\n[bold cyan]🔍 Verificando Configuración de IA[/bold cyan]\n")
@@ -154,6 +154,24 @@ def check_llm_config():
         # Get provider info
         info = get_provider_info()
         console.print(Panel(info, title="Configuración Actual", style="green"))
+        
+        # Show agent-specific models
+        console.print("\n[bold]Modelos por agente (optimizados automáticamente):[/bold]\n")
+        agents = {
+            "Business Analyst": "business_analyst",
+            "Project Manager": "project_manager",
+            "Backend Developer": "backend",
+            "Frontend Developer": "frontend",
+            "DevOps Engineer": "devops",
+            "QA Engineer": "qa",
+        }
+        
+        for agent_name, agent_role in agents.items():
+            model = get_best_model_for_agent(agent_role)
+            if model:
+                console.print(f"  • [cyan]{agent_name:20}[/cyan] → {model}")
+            else:
+                console.print(f"  • [cyan]{agent_name:20}[/cyan] → (usando modelo por defecto)")
         
         # List available models
         models = list_available_models()
@@ -164,6 +182,7 @@ def check_llm_config():
                 console.print(f"  • {model}")
         
         console.print("\n[bold green]✅ Configuración válida[/bold green]\n")
+        console.print("[dim]💡 Tip: Edita .env para override de modelo por agente (ver docs/MODEL_STRATEGY.md)[/dim]\n")
         
     except ValueError as e:
         console.print(f"\n[bold red]❌ Error:[/bold red] {e}\n")

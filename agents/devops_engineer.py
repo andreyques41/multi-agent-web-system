@@ -15,7 +15,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
+def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None, model_name: Optional[str] = None) -> Agent:
     """
     Create a DevOps Engineer agent specialized in deployment
     and infrastructure automation.
@@ -23,11 +23,22 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
-        llm: Language model to use (if None, will use default from environment)
+        llm: Language model to use (if provided, model_name is ignored)
+        model_name: Specific model to use (e.g., 'gpt-5.1-codex')
         
     Returns:
         Agent: Configured DevOps Engineer agent
     """
+    # If no LLM provided, create one with the specified or recommended model
+    if llm is None:
+        from utils.llm_config import get_llm_config, get_best_model_for_agent
+        
+        model = model_name or get_best_model_for_agent('devops')
+        
+        from langchain_openai import ChatOpenAI
+        llm_config = get_llm_config(model=model)
+        llm = ChatOpenAI(**llm_config)
+    
     agent_config = {
         'role': 'Senior DevOps Engineer',
         'goal': 'Create automated, secure, and reliable deployment pipelines and infrastructure for web applications',
@@ -76,10 +87,8 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
         'allow_delegation': False,
         'max_iter': 20,
         'memory': True,
+        'llm': llm,
     }
-    
-    if llm is not None:
-        agent_config['llm'] = llm
     
     return Agent(**agent_config)
 

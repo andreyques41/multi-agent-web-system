@@ -14,7 +14,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
+def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None, model_name: Optional[str] = None) -> Agent:
     """
     Create a Backend Developer agent specialized in building
     robust, scalable backend systems.
@@ -22,11 +22,22 @@ def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool =
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
-        llm: Language model to use (if None, will use default from environment)
+        llm: Language model to use (if provided, model_name is ignored)
+        model_name: Specific model to use (e.g., 'gpt-5.1-codex')
         
     Returns:
         Agent: Configured Backend Developer agent
     """
+    # If no LLM provided, create one with the specified or recommended model
+    if llm is None:
+        from utils.llm_config import get_llm_config, get_best_model_for_agent
+        
+        model = model_name or get_best_model_for_agent('backend')
+        
+        from langchain_openai import ChatOpenAI
+        llm_config = get_llm_config(model=model)
+        llm = ChatOpenAI(**llm_config)
+    
     agent_config = {
         'role': 'Senior Backend Developer',
         'goal': 'Design and implement robust, secure, and scalable backend systems using Python, Flask/FastAPI, and PostgreSQL',
@@ -64,10 +75,8 @@ def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool =
         'allow_delegation': False,
         'max_iter': 20,
         'memory': True,
+        'llm': llm,
     }
-    
-    if llm is not None:
-        agent_config['llm'] = llm
     
     return Agent(**agent_config)
 

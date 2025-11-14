@@ -58,7 +58,9 @@ Este sistema utiliza agentes de IA especializados que trabajan en equipo para de
 - Node.js (opcional, para proyectos frontend)
 - Docker (opcional, para deployment)
 
-### Setup Rápido
+### 🚀 Inicio Rápido
+
+**📘 Guía completa de instalación:** [docs/QUICKSTART.md](docs/QUICKSTART.md)
 
 ```bash
 # Clonar el repositorio
@@ -104,7 +106,7 @@ GITHUB_MODEL=gpt-5.1-codex  # Recomendado para desarrollo
 - `gpt-4o`, `gpt-4o-mini`, `gpt-4` - Serie GPT-4 (legacy)
 - `claude-3.5-sonnet` - Claude 3.5 (legacy)
 
-**Ver instrucciones completas:** [SETUP_GITHUB_MODELS.md](./SETUP_GITHUB_MODELS.md)
+**Ver instrucciones completas:** [docs/SETUP_GITHUB_MODELS.md](docs/SETUP_GITHUB_MODELS.md)
 
 #### **Opción 2: OpenAI**
 
@@ -197,13 +199,22 @@ multi-agent-web-dev/
 - GitHub Actions
 - Nginx
 
-## 📖 Documentación Detallada
+## 📖 Documentación
 
-- [Guía de Agentes](docs/agents.md)
-- [Configuración de Crews](docs/crews.md)
-- [Tools Disponibles](docs/tools.md)
-- [Templates de Proyectos](docs/templates.md)
-- [Ejemplos Avanzados](docs/examples.md)
+### 🚀 Guías de Inicio
+- **[Inicio Rápido](docs/QUICKSTART.md)** - Instalación y configuración paso a paso
+- **[Configurar GitHub Models](docs/SETUP_GITHUB_MODELS.md)** - Usar modelos gratis con Copilot
+- **[Estructura del Proyecto](docs/STRUCTURE.md)** - Organización de archivos y carpetas
+
+### 🧠 Guías Técnicas
+- **[Estrategia de Modelos](docs/MODEL_STRATEGY.md)** - Cómo elegir el mejor modelo para cada agente
+- [Guía de Agentes](docs/agents.md) *(próximamente)*
+- [Configuración de Crews](docs/crews.md) *(próximamente)*
+- [Tools Disponibles](docs/tools.md) *(próximamente)*
+
+### 💡 Recursos Adicionales
+- [Ejemplos de Proyectos](examples/README.md)
+- [Templates de Proyectos](docs/templates.md) *(próximamente)*
 
 ## 🤝 Contribuir
 

@@ -221,6 +221,6 @@ PROJECT_MANAGER_MODEL=gpt-5.1-codex
 
 ## 📚 Más Información
 
-- [Lista de modelos disponibles](../QUICKSTART.md#modelos-disponibles)
-- [Configurar GitHub Models](../SETUP_GITHUB_MODELS.md)
-- [Variables de entorno](./.env.example)
+- [Lista de modelos disponibles](QUICKSTART.md#modelos-disponibles)
+- [Configurar GitHub Models](SETUP_GITHUB_MODELS.md)
+- [Variables de entorno](../.env.example)

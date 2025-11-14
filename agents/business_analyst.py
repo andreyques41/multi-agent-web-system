@@ -27,20 +27,24 @@ def create_business_analyst_agent(tools: Optional[List] = None, verbose: bool = 
     Returns:
         Agent: Configured Business Analyst agent
     """
-    # If no LLM provided, create one with the specified or recommended model
+    # If no LLM provided, configure CrewAI LLM with GitHub Models endpoint
     if llm is None:
-        from utils.llm_config import get_llm_config, get_best_model_for_agent
+        from utils.llm_config import get_best_model_for_agent, GITHUB_MODELS
+        from crewai import LLM
         import os
         
-        # Use specified model, or get the best model for this agent
-        model = model_name or get_best_model_for_agent('business_analyst')
+        # Get the recommended model for this agent
+        model_key = model_name or get_best_model_for_agent('business_analyst')
+        model_id = GITHUB_MODELS.get(model_key, model_key) if model_key else "gpt-4.1"
         
-        # Get current provider from environment
-        provider = os.getenv("LLM_PROVIDER")
-        
-        from langchain_openai import ChatOpenAI
-        llm_config = get_llm_config(provider=provider, model=model)
-        llm = ChatOpenAI(**llm_config)
+        # Create CrewAI LLM with GitHub Models endpoint
+        llm = LLM(
+            model=model_id,
+            base_url="https://models.inference.ai.azure.com",
+            api_key=os.getenv("GITHUB_TOKEN"),
+            temperature=0.7 if model_id not in ["o1", "o1-mini", "o1-preview", "o3", "o3-mini", "o4-mini"] else None
+        )
+
     
     agent_config = {
         'role': 'Business Analyst',

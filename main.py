@@ -19,6 +19,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Configure CrewAI to use GitHub Models API
+# CrewAI internally uses OpenAI client, so we configure it to point to GitHub's endpoint
+github_token = os.getenv("GITHUB_TOKEN")
+if github_token:
+    # Use GitHub token as the API key
+    os.environ["OPENAI_API_KEY"] = github_token
+    # Point to GitHub Models endpoint (OpenAI-compatible)
+    os.environ["OPENAI_API_BASE"] = "https://models.inference.ai.azure.com"
+
 console = Console()
 
 

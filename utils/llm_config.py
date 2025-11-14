@@ -1,10 +1,8 @@
 """
 LLM Configuration Module
 
-Manages configuration for different AI model providers:
-- GitHub Models (uses your GitHub Copilot subscription - FREE)
-- OpenAI (GPT-4, GPT-3.5)
-- Anthropic (Claude 3.5 Sonnet, etc.)
+Manages configuration for GitHub Models API ONLY.
+Uses your GitHub Personal Access Token with 'models' scope.
 """
 
 import os
@@ -16,18 +14,13 @@ load_dotenv()
 
 
 class LLMProvider:
-    """Supported LLM providers"""
+    """Supported LLM provider"""
     GITHUB = "github"
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
 
 
-# Available models per provider
-# NOTE: GitHub Models API ONLY supports OpenAI and Microsoft models  
-# Claude/Anthropic models are NOT available in GitHub Models
+# Available models - GitHub Models API
 # Model IDs for inference API do NOT include provider prefix
-# See: https://models.github.ai/catalog/models (catalog shows openai/gpt-4o)
-# But inference endpoint expects just "gpt-4o"
+# See: https://models.github.ai/catalog/models
 GITHUB_MODELS = {
     # GPT-5 Series (Latest - April 2025)
     "gpt-5": "gpt-5",
@@ -75,43 +68,13 @@ GITHUB_MODELS = {
     "grok-3-mini": "grok-3-mini",
 }
 
-OPENAI_MODELS = {
-    # GPT-5 Series (if using OpenAI directly)
-    "gpt-5.1": "gpt-5.1",
-    "gpt-5.1-codex": "gpt-5.1-codex",
-    "gpt-5": "gpt-5",
-    "gpt-5-codex": "gpt-5-codex",
-    
-    # GPT-4 Series (Legacy)
-    "gpt-4-turbo": "gpt-4-turbo-preview",
-    "gpt-4": "gpt-4",
-    "gpt-4o": "gpt-4o",
-    "gpt-3.5-turbo": "gpt-3.5-turbo",
-}
-
-ANTHROPIC_MODELS = {
-    # Claude 4 Series (Latest)
-    "claude-4.5-sonnet": "claude-4.5-sonnet-20241114",
-    "claude-4-sonnet": "claude-4-sonnet-20241114",
-    
-    # Claude 3 Series (Legacy)
-    "claude-3.5-sonnet": "claude-3-5-sonnet-20241022",
-    "claude-3-opus": "claude-3-opus-20240229",
-    "claude-3-sonnet": "claude-3-sonnet-20240229",
-}
-
 
 def get_llm_config(provider: Optional[str] = None, model: Optional[str] = None) -> Dict[str, Any]:
     """
-    Get LLM configuration based on environment variables.
-    
-    Priority order:
-    1. GitHub Models (if GITHUB_TOKEN is set and provider not specified)
-    2. OpenAI (if OPENAI_API_KEY is set)
-    3. Anthropic (if ANTHROPIC_API_KEY is set)
+    Get LLM configuration for GitHub Models API.
     
     Args:
-        provider: Force specific provider ('github', 'openai', 'anthropic')
+        provider: Ignored - always uses GitHub Models
         model: Model name to use (if not specified, uses default from env)
         
     Returns:
@@ -121,50 +84,15 @@ def get_llm_config(provider: Optional[str] = None, model: Optional[str] = None) 
         >>> config = get_llm_config()
         >>> agent = Agent(..., llm=config)
     """
-    # Determine provider
-    if provider is None:
-        provider = os.getenv("LLM_PROVIDER", "").lower()
-        
-        # Auto-detect based on available API keys
-        if not provider:
-            if os.getenv("GITHUB_TOKEN"):
-                provider = LLMProvider.GITHUB
-            elif os.getenv("OPENAI_API_KEY"):
-                provider = LLMProvider.OPENAI
-            elif os.getenv("ANTHROPIC_API_KEY"):
-                provider = LLMProvider.ANTHROPIC
-            else:
-                raise ValueError(
-                    "No LLM provider configured. Please set one of: "
-                    "GITHUB_TOKEN, OPENAI_API_KEY, or ANTHROPIC_API_KEY"
-                )
+    # Always use GitHub Models
+    provider = LLMProvider.GITHUB
     
     # Get model name
     if model is None:
-        if provider == LLMProvider.GITHUB:
-            model = os.getenv("GITHUB_MODEL", "gpt-4.1")  # Default to best general coding model
-        elif provider == LLMProvider.OPENAI:
-            model = os.getenv("OPENAI_MODEL", "gpt-4o")
-        elif provider == LLMProvider.ANTHROPIC:
-            model = os.getenv("ANTHROPIC_MODEL", "claude-4.5-sonnet")
+        model = os.getenv("GITHUB_MODEL", "gpt-4.1")  # Default to best general coding model
     
     # Build configuration
-    config = _build_config(provider, model)
-    
-    return config
-
-
-def _build_config(provider: str, model: str) -> Dict[str, Any]:
-    """Build LLM configuration for the specified provider."""
-    
-    if provider == LLMProvider.GITHUB:
-        return _build_github_config(model)
-    elif provider == LLMProvider.OPENAI:
-        return _build_openai_config(model)
-    elif provider == LLMProvider.ANTHROPIC:
-        return _build_anthropic_config(model)
-    else:
-        raise ValueError(f"Unsupported provider: {provider}")
+    return _build_github_config(model)
 
 
 def _build_github_config(model: str) -> Dict[str, Any]:
@@ -203,56 +131,10 @@ def _build_github_config(model: str) -> Dict[str, Any]:
     return config
 
 
-def _build_openai_config(model: str) -> Dict[str, Any]:
-    """Build configuration for OpenAI."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "OPENAI_API_KEY not found. Get one at: "
-            "https://platform.openai.com/api-keys"
-        )
-    
-    # Map friendly model name to OpenAI model identifier
-    model_id = OPENAI_MODELS.get(model, model)
-    
-    config = {
-        "model": model_id,
-        "api_key": api_key,
-        "temperature": float(os.getenv("LLM_TEMPERATURE", "0.7")),
-        "max_tokens": int(os.getenv("LLM_MAX_TOKENS", "4000")),
-    }
-    
-    return config
-
-
-def _build_anthropic_config(model: str) -> Dict[str, Any]:
-    """Build configuration for Anthropic Claude."""
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "ANTHROPIC_API_KEY not found. Get one at: "
-            "https://console.anthropic.com/settings/keys"
-        )
-    
-    # Map friendly model name to Anthropic model identifier
-    model_id = ANTHROPIC_MODELS.get(model, model)
-    
-    config = {
-        "model": model_id,
-        "api_key": api_key,
-        "temperature": float(os.getenv("LLM_TEMPERATURE", "0.7")),
-        "max_tokens": int(os.getenv("LLM_MAX_TOKENS", "4000")),
-    }
-    
-    return config
-
-
 def list_available_models() -> Dict[str, list]:
-    """List all available models by provider."""
+    """List all available models."""
     return {
         "github": list(GITHUB_MODELS.keys()),
-        "openai": list(OPENAI_MODELS.keys()),
-        "anthropic": list(ANTHROPIC_MODELS.keys()),
     }
 
 
@@ -260,22 +142,10 @@ def get_provider_info() -> str:
     """Get information about the currently configured provider."""
     try:
         config = get_llm_config()
-        provider = os.getenv("LLM_PROVIDER", "").lower()
-        
-        if not provider:
-            if os.getenv("GITHUB_TOKEN"):
-                provider = "github"
-            elif os.getenv("OPENAI_API_KEY"):
-                provider = "openai"
-            elif os.getenv("ANTHROPIC_API_KEY"):
-                provider = "anthropic"
-        
         model = config.get("model", "unknown")
         
-        info = f"Provider: {provider.upper()}\nModel: {model}"
-        
-        if provider == "github":
-            info += "\n💰 Cost: FREE (using GitHub Copilot subscription)"
+        info = f"Provider: GITHUB MODELS\nModel: {model}"
+        info += "\n💰 Cost: FREE (using GitHub Personal Access Token)"
         
         return info
     except ValueError as e:
@@ -286,10 +156,7 @@ def get_best_model_for_agent(agent_role: str) -> Optional[str]:
     """
     Get the best model for a specific agent role.
     
-    Different models excel at different tasks:
-    - GPT-5.1-codex: Best for code generation (Backend, Frontend, DevOps)
-    - Claude-4.5-sonnet: Best for architecture and complex reasoning (Business Analyst, PM)
-    - GPT-5.1: Best for general tasks and QA
+    Different models excel at different tasks based on actual testing.
     
     Args:
         agent_role: Role of the agent (e.g., 'backend', 'frontend', 'business_analyst')
@@ -306,16 +173,6 @@ def get_best_model_for_agent(agent_role: str) -> Optional[str]:
     override = os.getenv(env_var)
     if override:
         return override
-    
-    # Determine provider to know which models are available
-    provider = os.getenv("LLM_PROVIDER", "").lower()
-    if not provider:
-        if os.getenv("GITHUB_TOKEN"):
-            provider = "github"
-        elif os.getenv("OPENAI_API_KEY"):
-            provider = "openai"
-        elif os.getenv("ANTHROPIC_API_KEY"):
-            provider = "anthropic"
     
     # Recommended models per agent role
     # ✅ BASED ON ACTUAL TESTING OF AVAILABLE MODELS
@@ -342,20 +199,9 @@ def get_best_model_for_agent(agent_role: str) -> Optional[str]:
     
     recommended = recommendations.get(agent_role.lower())
     
-    # If the recommended model is not available in the current provider, fallback to a compatible one
-    if recommended:
-        if provider == "github":
-            # GitHub Models supports both GPT and Claude through their API
-            if recommended in GITHUB_MODELS:
-                return recommended
-            # If Claude is recommended but not using Anthropic directly, use GPT-5.1 instead
-            elif "claude" in recommended:
-                return "gpt-5.1"  # Fallback to GPT for reasoning tasks
-            return recommended if recommended in GITHUB_MODELS else None
-        elif provider == "openai" and recommended in OPENAI_MODELS:
-            return recommended
-        elif provider == "anthropic" and recommended in ANTHROPIC_MODELS:
-            return recommended
+    # Return recommended model if it exists in GitHub Models
+    if recommended and recommended in GITHUB_MODELS:
+        return recommended
     
     # Return None to use the default model from environment
     return None

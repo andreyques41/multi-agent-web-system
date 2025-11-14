@@ -60,7 +60,25 @@ def create_project(args):
     """Create a new web project using the multi-agent system."""
     console.print(f"\n[bold green]📦 Creando Proyecto: {args.name}[/bold green]")
     console.print(f"Tipo: {args.project}")
-    console.print(f"Output: {args.output}\n")
+    console.print(f"Output: {args.output}")
+    
+    # Setup logging if requested
+    if args.debug or args.verbose:
+        import logging
+        log_level = logging.DEBUG if args.debug else logging.INFO
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.StreamHandler(),
+                logging.FileHandler(args.log_file) if args.log_file else logging.NullHandler()
+            ]
+        )
+        console.print(f"[yellow]🔍 Modo {'DEBUG' if args.debug else 'VERBOSE'} activado[/yellow]")
+        if args.log_file:
+            console.print(f"[yellow]📝 Logs guardándose en: {args.log_file}[/yellow]")
+    
+    console.print()
     
     # Import here to avoid errors if dependencies aren't installed yet
     try:
@@ -141,6 +159,58 @@ def list_templates():
         for feature in template['features']:
             console.print(f"    • {feature}")
         console.print()
+
+
+def test_llm(args):
+    """Test LLM connection with a simple prompt."""
+    from utils.llm_config import get_llm_config
+    from langchain_openai import ChatOpenAI
+    
+    print_banner()
+    console.print("\n[bold cyan]🧪 Probando Conexión con LLM[/bold cyan]\n")
+    
+    try:
+        provider = os.getenv("LLM_PROVIDER", "github")
+        model = args.model if args.model else os.getenv("GITHUB_MODEL", "gpt-5.1")
+        
+        console.print(f"[cyan]Provider:[/cyan] {provider}")
+        console.print(f"[cyan]Modelo:[/cyan] {model}")
+        console.print(f"[cyan]Prompt:[/cyan] {args.prompt}\n")
+        
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Llamando al LLM...", total=None)
+            
+            # Get LLM config
+            llm_config = get_llm_config(provider=provider, model=model)
+            llm = ChatOpenAI(**llm_config)
+            
+            # Make a simple call
+            from langchain_core.messages import HumanMessage
+            response = llm.invoke([HumanMessage(content=args.prompt)])
+            
+            progress.update(task, description="✅ Respuesta recibida!")
+        
+        console.print("\n[bold green]✅ LLM funcionando correctamente![/bold green]\n")
+        console.print(Panel(response.content, title="Respuesta del LLM", style="green"))
+        console.print()
+        
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error al conectar con LLM:[/bold red]")
+        console.print(f"{str(e)}\n")
+        
+        # Show detailed error if it's an authentication issue
+        if "authentication" in str(e).lower() or "api" in str(e).lower():
+            console.print("[yellow]💡 Posibles soluciones:[/yellow]")
+            console.print("  1. Verifica que tu GITHUB_TOKEN sea válido")
+            console.print("  2. Verifica que el token tenga el scope 'models' o permisos de Copilot")
+            console.print("  3. Intenta regenerar el token en https://github.com/settings/tokens")
+            console.print()
+        
+        sys.exit(1)
 
 
 def check_llm_config():
@@ -239,12 +309,41 @@ Ejemplos de uso:
         default='./output',
         help='Directorio de salida (default: ./output)'
     )
+    create_parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Mostrar logs detallados de los agentes'
+    )
+    create_parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Modo debug completo (incluye llamadas a LLM)'
+    )
+    create_parser.add_argument(
+        '--log-file',
+        type=str,
+        help='Guardar logs en archivo (ej: logs/proyecto.log)'
+    )
     
     # List templates command
     list_parser = subparsers.add_parser('list-templates', help='Listar templates disponibles')
     
     # Check config command
     check_parser = subparsers.add_parser('check-config', help='Verificar configuración del proveedor de IA')
+    
+    # Test LLM command (debugging)
+    test_parser = subparsers.add_parser('test-llm', help='Probar conexión con el LLM')
+    test_parser.add_argument(
+        '--model',
+        type=str,
+        help='Modelo específico a probar (ej: claude-4.5-sonnet, gpt-5.1-codex)'
+    )
+    test_parser.add_argument(
+        '--prompt',
+        type=str,
+        default='Hola, ¿funcionas correctamente?',
+        help='Prompt de prueba'
+    )
     
     args = parser.parse_args()
     
@@ -260,6 +359,8 @@ Ejemplos de uso:
         list_templates()
     elif args.command == 'check-config':
         check_llm_config()
+    elif args.command == 'test-llm':
+        test_llm(args)
 
 
 if __name__ == '__main__':

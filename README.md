@@ -232,7 +232,7 @@ MIT License - ver archivo [LICENSE](LICENSE) para más detalles.
 
 ## 👤 Autor
 
-**Andrey Ques**
+**Andrey Quesada**
 - GitHub: [@andreyques41](https://github.com/andreyques41)
 
 ## 🙏 Agradecimientos

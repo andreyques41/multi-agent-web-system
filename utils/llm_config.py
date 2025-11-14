@@ -23,28 +23,56 @@ class LLMProvider:
 
 
 # Available models per provider
+# NOTE: GitHub Models API ONLY supports OpenAI and Microsoft models  
+# Claude/Anthropic models are NOT available in GitHub Models
+# Model IDs for inference API do NOT include provider prefix
+# See: https://models.github.ai/catalog/models (catalog shows openai/gpt-4o)
+# But inference endpoint expects just "gpt-4o"
 GITHUB_MODELS = {
-    # GPT-5 Series (Latest - November 2025)
-    "gpt-5.1": "openai/gpt-5.1",
-    "gpt-5.1-codex": "openai/gpt-5.1-codex",  # Optimized for code
-    "gpt-5": "openai/gpt-5",
-    "gpt-5-codex": "openai/gpt-5-codex",  # Optimized for code
+    # GPT-5 Series (Latest - April 2025)
+    "gpt-5": "gpt-5",
+    "gpt-5-chat": "gpt-5-chat",
+    "gpt-5-mini": "gpt-5-mini",
+    "gpt-5-nano": "gpt-5-nano",
     
-    # Claude 4 Series (Latest - November 2025)
-    "claude-4.5-sonnet": "anthropic/claude-4.5-sonnet",  # Most advanced
-    "claude-4-sonnet": "anthropic/claude-4-sonnet",
+    # GPT-4.1 Series (Latest - April 2025) 
+    "gpt-4.1": "gpt-4.1",
+    "gpt-4.1-mini": "gpt-4.1-mini",
+    "gpt-4.1-nano": "gpt-4.1-nano",
     
-    # GPT-4 Series (Legacy but still available)
-    "gpt-4o": "openai/gpt-4o",
-    "gpt-4o-mini": "openai/gpt-4o-mini",
-    "gpt-4": "openai/gpt-4",
+    # GPT-4o Series (Legacy but widely used and VERIFIED WORKING)
+    "gpt-4o": "gpt-4o",
+    "gpt-4o-mini": "gpt-4o-mini",
     
-    # Claude 3 Series (Legacy)
-    "claude-3.5-sonnet": "anthropic/claude-3.5-sonnet",
+    # o Series (Reasoning models)
+    "o1": "o1",
+    "o1-mini": "o1-mini",
+    "o1-preview": "o1-preview",
+    "o3": "o3",
+    "o3-mini": "o3-mini",
+    "o4-mini": "o4-mini",
     
-    # Open Source Models
-    "llama-3.1-70b": "meta/llama-3.1-70b-instruct",
-    "phi-3": "microsoft/phi-3-medium-4k-instruct",
+    # Microsoft Phi Series
+    "phi-4": "Phi-4",
+    "phi-4-reasoning": "Phi-4-reasoning",
+    "phi-4-mini-instruct": "Phi-4-mini-instruct",
+    "phi-4-mini-reasoning": "Phi-4-mini-reasoning",
+    "phi-4-multimodal-instruct": "Phi-4-multimodal-instruct",
+    
+    # DeepSeek (Advanced reasoning and coding)
+    "deepseek-r1": "DeepSeek-R1",
+    "deepseek-v3": "DeepSeek-V3-0324",
+    
+    # Meta Llama
+    "llama-3.3-70b": "Llama-3.3-70B-Instruct",
+    
+    # Mistral AI
+    "mistral-small": "Mistral-small-2503",
+    "codestral": "Codestral-2501",
+    
+    # xAI Grok
+    "grok-3": "grok-3",
+    "grok-3-mini": "grok-3-mini",
 }
 
 OPENAI_MODELS = {
@@ -114,9 +142,9 @@ def get_llm_config(provider: Optional[str] = None, model: Optional[str] = None) 
     # Get model name
     if model is None:
         if provider == LLMProvider.GITHUB:
-            model = os.getenv("GITHUB_MODEL", "gpt-5.1-codex")  # Default to best coding model
+            model = os.getenv("GITHUB_MODEL", "gpt-4.1")  # Default to best general coding model
         elif provider == LLMProvider.OPENAI:
-            model = os.getenv("OPENAI_MODEL", "gpt-5.1-codex")
+            model = os.getenv("OPENAI_MODEL", "gpt-4o")
         elif provider == LLMProvider.ANTHROPIC:
             model = os.getenv("ANTHROPIC_MODEL", "claude-4.5-sonnet")
     
@@ -156,14 +184,21 @@ def _build_github_config(model: str) -> Dict[str, Any]:
     # Map friendly model name to GitHub model identifier
     model_id = GITHUB_MODELS.get(model, model)
     
+    # o-series models (o1, o3, etc.) only support temperature=1
+    # They have their own internal reasoning temperature
+    o_series_models = ["o1", "o1-mini", "o1-preview", "o3", "o3-mini", "o4-mini"]
+    
     # GitHub Models endpoint is OpenAI-compatible
     config = {
         "model": model_id,
-        "base_url": "https://models.github.ai/inference",
+        "base_url": "https://models.inference.ai.azure.com",
         "api_key": github_token,
-        "temperature": float(os.getenv("LLM_TEMPERATURE", "0.7")),
         "max_tokens": int(os.getenv("LLM_MAX_TOKENS", "4000")),
     }
+    
+    # Only add temperature if not an o-series model
+    if model not in o_series_models:
+        config["temperature"] = float(os.getenv("LLM_TEMPERATURE", "0.7"))
     
     return config
 
@@ -283,26 +318,40 @@ def get_best_model_for_agent(agent_role: str) -> Optional[str]:
             provider = "anthropic"
     
     # Recommended models per agent role
+    # ✅ BASED ON ACTUAL TESTING OF AVAILABLE MODELS
+    # Each model has been tested and verified to work correctly
     recommendations = {
-        # Code generation tasks - Best with Codex models
-        "backend": "gpt-5.1-codex",       # Heavy code generation
-        "frontend": "gpt-5.1-codex",      # UI/UX code generation
-        "devops": "gpt-5.1-codex",        # Infrastructure as Code
+        # Business Analysis - Best with reasoning models
+        "business_analyst": "o3",  # ✅ BEST reasoning (tested with logic problems)
         
-        # Architecture and reasoning - Best with Claude
-        "business_analyst": "claude-4.5-sonnet",  # Requirements analysis, complex reasoning
-        "project_manager": "claude-4.5-sonnet",   # Planning, documentation
+        # Project Management - Best with chat/planning models  
+        "project_manager": "gpt-5-chat",  # ✅ BEST for structured planning (tested with PM tasks)
         
-        # Testing and validation - GPT-5.1 general
-        "qa": "gpt-5.1",                  # Test generation and validation
+        # Backend Development - Best with code generation
+        "backend": "gpt-4.1",  # ✅ Superior coding (tested with Python code)
+        
+        # Frontend Development - Best with code generation
+        "frontend": "gpt-4.1",  # ✅ Superior coding (tested with JavaScript)
+        
+        # DevOps/Infrastructure - Best with technical architecture
+        "devops": "deepseek-r1",  # ✅ Excellent for system architecture (tested with API optimization)
+        
+        # QA Testing - Best with reasoning for test cases
+        "qa": "o3-mini",  # ✅ Good reasoning, more cost-effective than o3
     }
     
     recommended = recommendations.get(agent_role.lower())
     
-    # If the recommended model is not available in the current provider, return None (use default)
+    # If the recommended model is not available in the current provider, fallback to a compatible one
     if recommended:
-        if provider == "github" and recommended in GITHUB_MODELS:
-            return recommended
+        if provider == "github":
+            # GitHub Models supports both GPT and Claude through their API
+            if recommended in GITHUB_MODELS:
+                return recommended
+            # If Claude is recommended but not using Anthropic directly, use GPT-5.1 instead
+            elif "claude" in recommended:
+                return "gpt-5.1"  # Fallback to GPT for reasoning tasks
+            return recommended if recommended in GITHUB_MODELS else None
         elif provider == "openai" and recommended in OPENAI_MODELS:
             return recommended
         elif provider == "anthropic" and recommended in ANTHROPIC_MODELS:

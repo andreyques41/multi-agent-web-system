@@ -31,11 +31,13 @@ def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool 
     # If no LLM provided, create one with the specified or recommended model
     if llm is None:
         from utils.llm_config import get_llm_config, get_best_model_for_agent
+        import os
         
         model = model_name or get_best_model_for_agent('frontend')
+        provider = os.getenv("LLM_PROVIDER")
         
         from langchain_openai import ChatOpenAI
-        llm_config = get_llm_config(model=model)
+        llm_config = get_llm_config(provider=provider, model=model)
         llm = ChatOpenAI(**llm_config)
     
     agent_config = {

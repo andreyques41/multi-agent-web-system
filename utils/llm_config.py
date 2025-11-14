@@ -152,6 +152,32 @@ def get_provider_info() -> str:
         return f"No provider configured: {e}"
 
 
+def get_max_tokens_for_model(model_id: str) -> int:
+    """
+    Get appropriate max_tokens for a given model.
+    
+    Based on actual testing with GitHub Models API:
+    - gpt-4.1: 8000 tokens TOTAL (prompt + response)
+    - gpt-5-chat: 4000 tokens TOTAL
+    - o3-mini, o1-mini: 4000 tokens TOTAL
+    - gpt-4o: Higher limit, more stable
+    
+    We use conservative values to leave room for prompts.
+    """
+    # Models with very low limits
+    if model_id in ["gpt-5-chat", "gpt-5", "gpt-5-mini", "gpt-5-nano"]:
+        return 1000  # 4000 total - leave 3000 for prompt
+    elif model_id in ["o1-mini", "o3-mini", "o4-mini"]:
+        return 1000  # 4000 total - leave 3000 for prompt
+    elif model_id in ["o1", "o3", "o1-preview"]:
+        return 1500  # Slightly higher but still conservative
+    elif model_id in ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]:
+        return 2000  # 8000 total - leave 6000 for prompt
+    else:
+        # gpt-4o and others - use conservative default
+        return 2000
+
+
 def get_best_model_for_agent(agent_role: str) -> Optional[str]:
     """
     Get the best model for a specific agent role.
@@ -175,26 +201,22 @@ def get_best_model_for_agent(agent_role: str) -> Optional[str]:
         return override
     
     # Recommended models per agent role
-    # ✅ BASED ON ACTUAL TESTING OF AVAILABLE MODELS
-    # Each model has been tested and verified to work correctly
+    # ✅ OPTIMIZED STRATEGY - Without memory and context accumulation
+    # 
+    # Now that we've disabled memory and reduced context passing,
+    # we can use more advanced models without hitting token limits:
+    # - gpt-4o: Best all-around, reliable (use as default)
+    # - gpt-4.1: Good for code, 8000 token limit
+    # - gpt-5-chat: Advanced reasoning, 4000 token limit (use for simple tasks)
+    #
+    # Strategy: Use best model for each role that fits within limits
     recommendations = {
-        # Business Analysis - Best with reasoning models
-        "business_analyst": "o3",  # ✅ BEST reasoning (tested with logic problems)
-        
-        # Project Management - Best with chat/planning models  
-        "project_manager": "gpt-5-chat",  # ✅ BEST for structured planning (tested with PM tasks)
-        
-        # Backend Development - Best with code generation
-        "backend": "gpt-4.1",  # ✅ Superior coding (tested with Python code)
-        
-        # Frontend Development - Best with code generation
-        "frontend": "gpt-4.1",  # ✅ Superior coding (tested with JavaScript)
-        
-        # DevOps/Infrastructure - Best with technical architecture
-        "devops": "deepseek-r1",  # ✅ Excellent for system architecture (tested with API optimization)
-        
-        # QA Testing - Best with reasoning for test cases
-        "qa": "o3-mini",  # ✅ Good reasoning, more cost-effective than o3
+        "business_analyst": "gpt-4o",    # Needs context, use reliable model
+        "project_manager": "gpt-4o",     # Needs overview, use reliable model
+        "backend": "gpt-4o",             # Complex code, need stability
+        "frontend": "gpt-4o",            # Complex code, need stability
+        "devops": "gpt-4o",              # Infrastructure needs stability
+        "qa": "gpt-4o",                  # Testing needs thoroughness
     }
     
     recommended = recommendations.get(agent_role.lower())

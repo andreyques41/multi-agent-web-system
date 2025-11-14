@@ -6,6 +6,7 @@ crewai-tools>=0.17.0
 openai>=1.54.0
 langchain>=0.3.0
 langchain-openai>=0.2.0
+tiktoken>=0.5.0  # Token counting for truncation
 
 # Optional AI Providers
 anthropic>=0.39.0

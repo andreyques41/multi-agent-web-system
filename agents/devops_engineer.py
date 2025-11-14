@@ -31,7 +31,7 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
     """
     # If no LLM provided, configure CrewAI LLM with GitHub Models endpoint
     if llm is None:
-        from utils.llm_config import get_best_model_for_agent, GITHUB_MODELS
+        from utils.llm_config import get_best_model_for_agent, GITHUB_MODELS, get_max_tokens_for_model
         from crewai import LLM
         import os
         
@@ -40,12 +40,18 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
         model_id = GITHUB_MODELS.get(model_key, model_key) if model_key else "gpt-4.1"
         
         # Create CrewAI LLM with GitHub Models endpoint
-        llm = LLM(
-            model=model_id,
-            base_url="https://models.inference.ai.azure.com",
-            api_key=os.getenv("GITHUB_TOKEN"),
-            temperature=0.7 if model_id not in ["o1", "o1-mini", "o1-preview", "o3", "o3-mini", "o4-mini"] else None
-        )
+        llm_config = {
+            "model": model_id,
+            "base_url": "https://models.inference.ai.azure.com",
+            "api_key": os.getenv("GITHUB_TOKEN"),
+            "max_tokens": get_max_tokens_for_model(model_id),
+        }
+        
+        # Only add temperature if not an o-series model
+        if model_id not in ["o1", "o1-mini", "o1-preview", "o3", "o3-mini", "o4-mini"]:
+            llm_config["temperature"] = 0.7
+        
+        llm = LLM(**llm_config)
     
     agent_config = {
         'role': 'Senior DevOps Engineer',
@@ -94,7 +100,7 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
         'verbose': verbose,
         'allow_delegation': False,
         'max_iter': 20,
-        'memory': True,
+        'memory': False,  # Disabled to reduce token usage
         'llm': llm,
     }
     

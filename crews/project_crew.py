@@ -16,6 +16,8 @@ from agents import (
     create_devops_engineer_agent,
     create_project_manager_agent,
 )
+from utils.token_manager import TaskOutputManager, count_tokens
+from crewai_tools import FileWriterTool, DirectoryReadTool, FileReadTool
 
 
 class ProjectCrew:
@@ -44,165 +46,209 @@ class ProjectCrew:
         self.output_dir = Path(output_dir)
         self.description = description or f"A {project_type} project for small/medium business"
         
-        # Create agents - each will use their recommended model automatically
-        # Business Analyst & PM: Best with Claude 4.5 Sonnet (complex reasoning)
-        # Backend/Frontend/DevOps: Best with GPT-5.1 Codex (code generation)
-        # QA: Best with GPT-5.1 (general testing)
-        self.pm_agent = create_project_manager_agent()  # -> claude-4.5-sonnet
-        self.ba_agent = create_business_analyst_agent()  # -> claude-4.5-sonnet
-        self.backend_agent = create_backend_developer_agent()  # -> gpt-5.1-codex
-        self.frontend_agent = create_frontend_developer_agent()  # -> gpt-5.1-codex
-        self.qa_agent = create_qa_engineer_agent()  # -> gpt-5.1
-        self.devops_agent = create_devops_engineer_agent()  # -> gpt-5.1-codex
-        
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create project-specific directory
+        self.project_dir = self.output_dir / self.project_name
+        self.project_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize token manager to prevent 413 errors
+        self.token_manager = TaskOutputManager(model="gpt-4o")
+        
+        # File operation tools for agents to create actual files
+        # FileWriterTool allows agents to write files to the project directory
+        self.file_tools = [
+            FileWriterTool(directory=str(self.project_dir))
+        ]
+        
+        # Create agents with file tools - all use gpt-4o for stability
+        self.pm_agent = create_project_manager_agent(tools=self.file_tools)
+        self.ba_agent = create_business_analyst_agent(tools=self.file_tools)
+        self.backend_agent = create_backend_developer_agent(tools=self.file_tools)
+        self.frontend_agent = create_frontend_developer_agent(tools=self.file_tools)
+        self.qa_agent = create_qa_engineer_agent(tools=self.file_tools)
+        self.devops_agent = create_devops_engineer_agent(tools=self.file_tools)
     
     def create_tasks(self) -> List[Task]:
         """Create tasks for the crew based on project type."""
         tasks = []
         
+        # Safety prefix for all tasks to avoid content policy violations
+        safety_prefix = """
+        IMPORTANT CONTENT POLICY:
+        - This is a PROFESSIONAL BUSINESS application
+        - Focus ONLY on corporate/enterprise software features
+        - NO personal, social, dating, adult, or inappropriate content
+        - Use professional examples: companies, products, services, data
+        - Stick to standard business domains: e-commerce, CRM, dashboards, analytics
+        """
+        
         # Task 1: Project Planning (PM)
+        # NO CONTEXT - first task starts fresh
         task_planning = Task(
-            description=f"""
-            Create a comprehensive project plan for: {self.project_name}
+            description=safety_prefix + f"""
+            Create a professional business project plan for: {self.project_name}
             Project Type: {self.project_type}
-            Client Description: {self.description}
             
-            Define:
-            - Project scope and objectives
-            - Timeline and milestones
-            - Team coordination strategy
-            - Risk assessment
-            - Success criteria
+            This is a BUSINESS/CORPORATE project. Focus on:
+            - Professional project scope and business objectives
+            - Development timeline with 3-4 milestones
+            - Team coordination and resource allocation
+            - Technical risk assessment
+            - Measurable success criteria
+            
+            Format as markdown with clear sections.
+            Keep it professional and business-focused. Maximum 300 words.
             """,
             agent=self.pm_agent,
-            expected_output="Detailed project plan with timeline, milestones, and risk assessment"
+            expected_output="Professional project plan in markdown format",
+            context=[]  # Explicitly set to empty - no previous context
         )
         tasks.append(task_planning)
         
         # Task 2: Requirements Analysis (BA)
+        # ONLY receives Task 1 context (project plan)
         task_requirements = Task(
-            description=f"""
-            Analyze requirements and create detailed specifications for: {self.project_name}
-            Project Type: {self.project_type}
-            Client Needs: {self.description}
+            description=safety_prefix + f"""
+            Create technical requirements for a BUSINESS {self.project_type} application: {self.project_name}
             
-            Deliver:
-            - Functional requirements
-            - User stories with acceptance criteria
-            - Technical recommendations
-            - Wireframe suggestions
+            This is a PROFESSIONAL/CORPORATE project. Specify:
+            - 5 core business features (e.g., user authentication, data display, forms)
+            - 3 user stories for business users
+            - Technical stack recommendations (React/Vue, Node/Python, PostgreSQL)
+            - Professional UI/UX guidelines
+            
+            Format as markdown with clear sections.
+            Keep it technical and business-focused. Maximum 200 words.
+            NO personal, social, or inappropriate content.
             """,
             agent=self.ba_agent,
-            expected_output="Complete requirements document with user stories and technical specifications",
-            context=[task_planning]
+            expected_output="Technical requirements document in markdown format",
+            context=[task_planning]  # Only needs project plan
         )
         tasks.append(task_requirements)
         
         # Task 3: Backend Design & Implementation
+        # ONLY receives Task 2 context (requirements) - skips Task 1
         if self.project_type in ['ecommerce', 'dashboard', 'api']:
             task_backend = Task(
-                description=f"""
-                Design and implement the backend system for: {self.project_name}
+                description=safety_prefix + f"""
+                Design PROFESSIONAL backend API for business {self.project_type}: {self.project_name}
                 
-                Based on the requirements, create:
-                - API architecture and endpoints
-                - Database schema
-                - Authentication system
-                - Business logic implementation
-                - API documentation
+                Create BUSINESS-FOCUSED backend documentation:
+                - 3 main REST API endpoints (essential business operations)
+                - Database schema (2-3 tables: users, main business entity)
+                - JWT authentication approach
+                - Basic CRUD operations
+                - API code examples in Python/Flask OR Node.js/Express
                 
-                Output directory: {self.output_dir / self.project_name / 'backend'}
+                Database: PostgreSQL
+                
+                Format as markdown with code blocks.
+                Keep it professional and concise. Maximum 300 words total.
+                NO inappropriate or personal content.
                 """,
                 agent=self.backend_agent,
-                expected_output="Complete backend implementation with API, database, and documentation",
-                context=[task_requirements]
+                expected_output="Backend API documentation in markdown with code examples",
+                context=[task_requirements]  # Only needs requirements, not project plan
             )
             tasks.append(task_backend)
         
         # Task 4: Frontend Implementation
+        # ONLY receives Task 2 context (requirements) - skips Task 1 and 3
         if self.project_type in ['ecommerce', 'landing', 'dashboard']:
-            backend_context = [task_backend] if self.project_type in ['ecommerce', 'dashboard'] else []
-            
             task_frontend = Task(
-                description=f"""
-                Create the frontend application for: {self.project_name}
-                Project Type: {self.project_type}
+                description=safety_prefix + f"""
+                Create PROFESSIONAL frontend for business {self.project_type}: {self.project_name}
                 
-                Implement:
-                - Responsive user interface
-                - Component architecture
-                - API integration (if backend exists)
-                - Forms and validation
-                - Navigation
+                Build BUSINESS-FOCUSED UI documentation:
+                - 2 main pages (Home, Dashboard - essential pages)
+                - Responsive design approach (desktop/mobile)
+                - Professional color scheme (blue/gray corporate colors)
+                - Basic business form (login or contact)
+                - HTML/CSS/JS code examples
                 
-                Output directory: {self.output_dir / self.project_name / 'frontend'}
+                Use: React OR Vue.js OR vanilla HTML/CSS/JS
+                Styling: Tailwind CSS OR Bootstrap
+                
+                Format as markdown with code blocks.
+                Keep it professional and concise. Maximum 300 words total.
+                NO personal, social, or inappropriate content - BUSINESS ONLY.
                 """,
                 agent=self.frontend_agent,
-                expected_output="Complete frontend application with responsive design and all features",
-                context=[task_requirements] + backend_context
+                expected_output="Frontend documentation in markdown with code examples",
+                context=[task_requirements]  # Only needs requirements, not backend details
             )
             tasks.append(task_frontend)
         
         # Task 5: Testing & QA
+        # Receives ONLY requirements (Task 2) - NO implementation details
         task_testing = Task(
-            description=f"""
-            Create and execute comprehensive tests for: {self.project_name}
+            description=safety_prefix + f"""
+            Create PROFESSIONAL test plan for business application: {self.project_name}
             
-            Provide:
-            - Test plan
-            - Unit tests
-            - Integration tests
-            - Test coverage report
-            - Bug report (if any)
-            - Quality assurance sign-off
+            Provide BUSINESS-FOCUSED test documentation:
+            - Brief test plan (focus on business functionality)
+            - 3 unit test examples (test key business logic)
+            - 1 integration test example (test main user workflow)
+            - Brief test coverage summary
+            
+            Focus on: Authentication, data validation, API responses
+            
+            Format as markdown with code examples.
+            Keep it concise and professional. Maximum 200 words.
             """,
             agent=self.qa_agent,
-            expected_output="Complete test suite with coverage report and quality assessment",
-            context=tasks[2:]  # All development tasks
+            expected_output="Test plan in markdown with code examples",
+            context=[task_requirements]  # Only needs requirements to test against
         )
         tasks.append(task_testing)
         
         # Task 6: Deployment Setup
+        # NO CONTEXT - deployment config is independent
         task_deployment = Task(
-            description=f"""
-            Set up deployment infrastructure for: {self.project_name}
+            description=safety_prefix + f"""
+            Create PROFESSIONAL deployment config for business {self.project_type}: {self.project_name}
             
-            Create:
-            - Dockerfile(s)
-            - docker-compose.yml
-            - CI/CD pipeline (GitHub Actions)
-            - Nginx configuration
-            - Deployment documentation
-            - Environment setup guide
+            Provide STANDARD deployment documentation:
+            - Dockerfile example (Node.js OR Python base image)
+            - docker-compose.yml example (web service + database)
+            - Brief GitHub Actions CI/CD workflow
+            - Brief deployment instructions
             
-            Output directory: {self.output_dir / self.project_name}
+            Use standard practices for {self.project_type} applications.
+            
+            Format as markdown with code blocks (YAML, Dockerfile).
+            Keep it professional and concise. Maximum 200 words total.
             """,
             agent=self.devops_agent,
-            expected_output="Complete deployment configuration with Docker, CI/CD, and documentation",
-            context=[task_testing]
+            expected_output="Deployment documentation in markdown with config examples",
+            context=[]  # Deployment is generic, doesn't need previous outputs
         )
         tasks.append(task_deployment)
         
         # Task 7: Final Documentation & Handoff (PM)
+        # ONLY receives Task 1 (project plan) + Task 2 (requirements) - minimal context
         task_handoff = Task(
-            description=f"""
-            Create final project documentation and handoff package for: {self.project_name}
+            description=safety_prefix + f"""
+            Create PROFESSIONAL README documentation for: {self.project_name}
             
-            Compile:
-            - Complete project documentation
-            - Setup and installation guide
-            - User manual
-            - Deployment guide
-            - Maintenance recommendations
-            - Future enhancement suggestions
+            Provide BUSINESS-FOCUSED documentation:
+            - Project overview and business value
+            - Quick start guide (how to run)
+            - Setup instructions (dependencies, environment)
+            - Usage guide (main features)
+            - Brief deployment guide
+            - 3 future enhancements
             
-            Output directory: {self.output_dir / self.project_name}
+            Format as proper README.md with clear sections and structure.
+            Keep it professional and client-ready. Maximum 250 words total.
+            Focus on BUSINESS value and technical accuracy.
             """,
             agent=self.pm_agent,
-            expected_output="Complete project documentation package ready for client handoff",
-            context=tasks  # All previous tasks
+            expected_output="Professional README.md documentation",
+            context=[task_planning, task_requirements]  # Only high-level info, not implementation details
         )
         tasks.append(task_handoff)
         
@@ -216,6 +262,65 @@ class ProjectCrew:
             str: Summary of the project creation process
         """
         tasks = self.create_tasks()
+        
+        # Storage for task outputs to save as files
+        task_outputs = {}
+        
+        # Add step callbacks to truncate outputs and save files
+        def create_task_callback(task_name, filename=None):
+            """Create a callback for a specific task."""
+            def callback(output):
+                """Callback to truncate task output and save to file."""
+                if hasattr(output, 'raw'):
+                    raw_output = str(output.raw)
+                else:
+                    raw_output = str(output)
+                
+                # Store output
+                task_outputs[task_name] = raw_output
+                
+                # Save to file if filename specified
+                if filename:
+                    file_path = self.project_dir / filename
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+                    file_path.write_text(raw_output, encoding='utf-8')
+                    print(f"✅ Saved: {filename}")
+                
+                # Count tokens
+                token_count = count_tokens(raw_output, "gpt-4o")
+                
+                # If output is too large, truncate it for next task
+                if token_count > 1500:
+                    truncated = self.token_manager.store_output(
+                        task_id=id(output),
+                        output=raw_output
+                    )
+                    print(f"⚠️  Output truncated: {token_count} → ~1500 tokens")
+                    
+                    if hasattr(output, 'raw'):
+                        output.raw = truncated
+                    return output
+                
+                return output
+            return callback
+        
+        # Apply callbacks to tasks with file names
+        task_file_mapping = {
+            0: ('planning', 'PROJECT_PLAN.md'),
+            1: ('requirements', 'REQUIREMENTS.md'),
+            2: ('backend', 'BACKEND.md'),  # Backend task if exists
+            3: ('frontend', 'FRONTEND.md'),  # Frontend task if exists  
+            4: ('testing', 'TESTING.md'),
+            5: ('deployment', 'DEPLOYMENT.md'),
+            6: ('docs', 'README.md')
+        }
+        
+        for idx, task in enumerate(tasks):
+            if idx in task_file_mapping:
+                task_name, filename = task_file_mapping[idx]
+                task.callback = create_task_callback(task_name, filename)
+            else:
+                task.callback = create_task_callback(f'task_{idx}', None)
         
         crew = Crew(
             agents=[

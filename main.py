@@ -126,6 +126,8 @@ def create_project(args):
     except Exception as e:
         console.print(f"\n[bold red]Error durante la creación del proyecto:[/bold red]")
         console.print(f"{str(e)}\n")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 

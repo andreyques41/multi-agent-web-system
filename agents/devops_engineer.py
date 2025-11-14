@@ -15,7 +15,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = True) -> Agent:
+def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
     """
     Create a DevOps Engineer agent specialized in deployment
     and infrastructure automation.
@@ -23,14 +23,15 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
+        llm: Language model to use (if None, will use default from environment)
         
     Returns:
         Agent: Configured DevOps Engineer agent
     """
-    return Agent(
-        role='Senior DevOps Engineer',
-        goal='Create automated, secure, and reliable deployment pipelines and infrastructure for web applications',
-        backstory="""You are a Senior DevOps Engineer with 6+ years of experience 
+    agent_config = {
+        'role': 'Senior DevOps Engineer',
+        'goal': 'Create automated, secure, and reliable deployment pipelines and infrastructure for web applications',
+        'backstory': """You are a Senior DevOps Engineer with 6+ years of experience 
         in cloud infrastructure, containerization, and CI/CD automation. You specialize 
         in making deployment processes smooth, automated, and reliable for SMEs.
         
@@ -70,12 +71,17 @@ def create_devops_engineer_agent(tools: Optional[List] = None, verbose: bool = T
         - Simple but effective monitoring
         - Automated backups
         - Clear documentation for non-DevOps teams""",
-        tools=tools or [],
-        verbose=verbose,
-        allow_delegation=False,
-        max_iter=20,
-        memory=True,
-    )
+        'tools': tools or [],
+        'verbose': verbose,
+        'allow_delegation': False,
+        'max_iter': 20,
+        'memory': True,
+    }
+    
+    if llm is not None:
+        agent_config['llm'] = llm
+    
+    return Agent(**agent_config)
 
 
 def create_deployment_plan_task_description(

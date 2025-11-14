@@ -43,17 +43,71 @@ copy .env.example .env   # Windows
 cp .env.example .env     # Linux/Mac
 ```
 
-Edita el archivo `.env` y agrega tu API key de OpenAI:
+## 🔑 Configuración de API Keys
 
-```env
-OPENAI_API_KEY=sk-tu-api-key-aqui
-```
+Tienes **3 opciones** de proveedores de IA:
 
-**¿Cómo obtener tu API Key?**
+### **Opción 1: GitHub Models (RECOMENDADO - GRATIS)** ⭐
+
+Si tienes **GitHub Copilot**, puedes usar modelos premium **SIN COSTO ADICIONAL**:
+
+1. **Obtener un Personal Access Token (PAT):**
+   - Ve a [https://github.com/settings/tokens](https://github.com/settings/tokens)
+   - Haz clic en **"Generate new token" → "Generate new token (classic)"**
+   - Dale un nombre descriptivo (ej: "multi-agent-web-dev")
+   - Selecciona el scope: **`models`** (GitHub Models API)
+   - Haz clic en **"Generate token"**
+   - **COPIA EL TOKEN** (solo se muestra una vez)
+
+2. **Configurar en `.env`:**
+   ```env
+   LLM_PROVIDER=github
+   GITHUB_TOKEN=ghp_tu_token_aqui
+   GITHUB_MODEL=gpt-4o  # o claude-3.5-sonnet, gpt-4o-mini, etc.
+   ```
+
+3. **Modelos disponibles:**
+   - `gpt-4o` - Recomendado para desarrollo completo
+   - `claude-3.5-sonnet` - Excelente para código complejo
+   - `gpt-4o-mini` - Más rápido para tareas simples
+   - `gpt-4` - GPT-4 original
+   - `llama-3.1-70b` - Open source potente
+   - `phi-3` - Modelo pequeño de Microsoft
+
+### **Opción 2: OpenAI** 
+
+Pago por uso (~$2-5 USD por proyecto completo):
+
 1. Ve a [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 2. Inicia sesión o crea una cuenta
 3. Haz clic en "Create new secret key"
-4. Copia la key y pégala en tu archivo `.env`
+4. Copia la key y pégala en tu archivo `.env`:
+
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-tu-api-key-aqui
+OPENAI_MODEL=gpt-4-turbo
+```
+
+### **Opción 3: Anthropic Claude**
+
+Pago por uso (~$1-3 USD por proyecto completo - MÁS ECONÓMICO):
+
+1. Ve a [https://console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+2. Crea una cuenta y genera un API key
+3. Configura en `.env`:
+
+```env
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-tu-api-key-aqui
+ANTHROPIC_MODEL=claude-3.5-sonnet
+```
+
+### 🆓 **¿Cuál elegir?**
+
+- **¿Tienes GitHub Copilot?** → Usa GitHub Models (Opción 1) - ¡GRATIS!
+- **¿Buscas mejor precio?** → Anthropic Claude (Opción 3) - Más barato
+- **¿Quieres simplicidad?** → OpenAI (Opción 2) - Más conocido
 
 ## 💻 Uso Básico
 

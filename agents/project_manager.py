@@ -15,7 +15,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = True) -> Agent:
+def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
     """
     Create a Project Manager agent specialized in coordinating
     multi-agent development teams.
@@ -23,14 +23,15 @@ def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = T
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
+        llm: Language model to use (if None, will use default from environment)
         
     Returns:
         Agent: Configured Project Manager agent
     """
-    return Agent(
-        role='Technical Project Manager',
-        goal='Coordinate the development team, ensure timely delivery, and maintain clear communication with stakeholders',
-        backstory="""You are a Technical Project Manager with 10+ years of experience 
+    agent_config = {
+        'role': 'Technical Project Manager',
+        'goal': 'Coordinate the development team, ensure timely delivery, and maintain clear communication with stakeholders',
+        'backstory': """You are a Technical Project Manager with 10+ years of experience 
         managing web development projects for small and medium-sized businesses. You have 
         a technical background as a former developer, which helps you understand the 
         complexity and challenges of software development.
@@ -70,12 +71,17 @@ def create_project_manager_agent(tools: Optional[List] = None, verbose: bool = T
         - Simple solutions are often better
         - Clear documentation reduces support costs
         - Training and handoff are part of delivery""",
-        tools=tools or [],
-        verbose=verbose,
-        allow_delegation=True,  # PM can delegate to other agents
-        max_iter=15,
-        memory=True,
-    )
+        'tools': tools or [],
+        'verbose': verbose,
+        'allow_delegation': True,  # PM can delegate to other agents
+        'max_iter': 15,
+        'memory': True,
+    }
+    
+    if llm is not None:
+        agent_config['llm'] = llm
+    
+    return Agent(**agent_config)
 
 
 def create_project_planning_task_description(requirements: str) -> str:

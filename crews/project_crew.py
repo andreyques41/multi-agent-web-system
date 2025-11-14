@@ -5,6 +5,7 @@ Main crew that coordinates all agents to work together on a web development proj
 """
 
 from crewai import Crew, Task, Process
+from langchain_openai import ChatOpenAI
 from typing import List, Optional
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from agents import (
     create_devops_engineer_agent,
     create_project_manager_agent,
 )
+from utils.llm_config import get_llm_config
 
 
 class ProjectCrew:
@@ -44,13 +46,17 @@ class ProjectCrew:
         self.output_dir = Path(output_dir)
         self.description = description or f"A {project_type} project for small/medium business"
         
-        # Create agents
-        self.pm_agent = create_project_manager_agent()
-        self.ba_agent = create_business_analyst_agent()
-        self.backend_agent = create_backend_developer_agent()
-        self.frontend_agent = create_frontend_developer_agent()
-        self.qa_agent = create_qa_engineer_agent()
-        self.devops_agent = create_devops_engineer_agent()
+        # Get LLM configuration
+        llm_config = get_llm_config()
+        self.llm = ChatOpenAI(**llm_config)
+        
+        # Create agents with LLM configuration
+        self.pm_agent = create_project_manager_agent(llm=self.llm)
+        self.ba_agent = create_business_analyst_agent(llm=self.llm)
+        self.backend_agent = create_backend_developer_agent(llm=self.llm)
+        self.frontend_agent = create_frontend_developer_agent(llm=self.llm)
+        self.qa_agent = create_qa_engineer_agent(llm=self.llm)
+        self.devops_agent = create_devops_engineer_agent(llm=self.llm)
         
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)

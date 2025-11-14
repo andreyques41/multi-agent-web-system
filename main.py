@@ -38,20 +38,20 @@ def print_banner():
 
 def check_environment():
     """Check if required environment variables are set."""
-    required_vars = ['OPENAI_API_KEY']
-    missing_vars = []
+    # Check if ANY provider is configured
+    github_token = os.getenv('GITHUB_TOKEN')
+    openai_key = os.getenv('OPENAI_API_KEY')
+    anthropic_key = os.getenv('ANTHROPIC_API_KEY')
     
-    for var in required_vars:
-        if not os.getenv(var):
-            missing_vars.append(var)
-    
-    if missing_vars:
+    if not any([github_token, openai_key, anthropic_key]):
         console.print("\n[bold red]⚠️  Configuración Incompleta[/bold red]\n")
-        console.print("Las siguientes variables de entorno no están configuradas:")
-        for var in missing_vars:
-            console.print(f"  • {var}")
-        console.print("\nPor favor, configura tu archivo .env basándote en .env.example")
-        console.print("Mínimo requerido: OPENAI_API_KEY\n")
+        console.print("No se encontró ningún proveedor de IA configurado.")
+        console.print("\n[bold]Configura UNO de los siguientes:[/bold]")
+        console.print("  • GITHUB_TOKEN (Recomendado - GRATIS con GitHub Copilot)")
+        console.print("  • OPENAI_API_KEY (Pay-per-use)")
+        console.print("  • ANTHROPIC_API_KEY (Pay-per-use - Más económico)")
+        console.print("\nPor favor, edita tu archivo .env basándote en .env.example")
+        console.print("Más información: python main.py check-config\n")
         return False
     return True
 
@@ -143,6 +143,37 @@ def list_templates():
         console.print()
 
 
+def check_llm_config():
+    """Check and display LLM provider configuration."""
+    from utils.llm_config import get_provider_info, list_available_models
+    
+    print_banner()
+    console.print("\n[bold cyan]🔍 Verificando Configuración de IA[/bold cyan]\n")
+    
+    try:
+        # Get provider info
+        info = get_provider_info()
+        console.print(Panel(info, title="Configuración Actual", style="green"))
+        
+        # List available models
+        models = list_available_models()
+        console.print("\n[bold]Modelos disponibles por proveedor:[/bold]")
+        for provider, model_list in models.items():
+            console.print(f"\n[cyan]{provider.upper()}:[/cyan]")
+            for model in model_list:
+                console.print(f"  • {model}")
+        
+        console.print("\n[bold green]✅ Configuración válida[/bold green]\n")
+        
+    except ValueError as e:
+        console.print(f"\n[bold red]❌ Error:[/bold red] {e}\n")
+        console.print("[bold]Configura tu archivo .env con UNO de los siguientes:[/bold]")
+        console.print("  • GITHUB_TOKEN=tu_token (Recomendado - GRATIS)")
+        console.print("  • OPENAI_API_KEY=tu_key")
+        console.print("  • ANTHROPIC_API_KEY=tu_key\n")
+        sys.exit(1)
+
+
 def main():
     """Main entry point."""
     print_banner()
@@ -156,6 +187,7 @@ Ejemplos de uso:
   python main.py create --project landing --name "Consultora ABC" --description "Landing page para consultora"
   python main.py create --project dashboard --name "Panel Admin"
   python main.py list-templates
+  python main.py check-config
         """
     )
     
@@ -192,6 +224,9 @@ Ejemplos de uso:
     # List templates command
     list_parser = subparsers.add_parser('list-templates', help='Listar templates disponibles')
     
+    # Check config command
+    check_parser = subparsers.add_parser('check-config', help='Verificar configuración del proveedor de IA')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -204,6 +239,8 @@ Ejemplos de uso:
         create_project(args)
     elif args.command == 'list-templates':
         list_templates()
+    elif args.command == 'check-config':
+        check_llm_config()
 
 
 if __name__ == '__main__':

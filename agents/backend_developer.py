@@ -14,7 +14,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool = True) -> Agent:
+def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
     """
     Create a Backend Developer agent specialized in building
     robust, scalable backend systems.
@@ -22,14 +22,15 @@ def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool =
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
+        llm: Language model to use (if None, will use default from environment)
         
     Returns:
         Agent: Configured Backend Developer agent
     """
-    return Agent(
-        role='Senior Backend Developer',
-        goal='Design and implement robust, secure, and scalable backend systems using Python, Flask/FastAPI, and PostgreSQL',
-        backstory="""You are a Senior Backend Developer with 8+ years of experience building 
+    agent_config = {
+        'role': 'Senior Backend Developer',
+        'goal': 'Design and implement robust, secure, and scalable backend systems using Python, Flask/FastAPI, and PostgreSQL',
+        'backstory': """You are a Senior Backend Developer with 8+ years of experience building 
         web applications for small and medium-sized businesses. You specialize in Python 
         and have deep expertise in Flask, FastAPI, SQLAlchemy, and PostgreSQL.
         
@@ -58,12 +59,17 @@ def create_backend_developer_agent(tools: Optional[List] = None, verbose: bool =
         - SQLAlchemy ORM for database operations
         - pytest for testing
         - Pydantic for data validation""",
-        tools=tools or [],
-        verbose=verbose,
-        allow_delegation=False,
-        max_iter=20,
-        memory=True,
-    )
+        'tools': tools or [],
+        'verbose': verbose,
+        'allow_delegation': False,
+        'max_iter': 20,
+        'memory': True,
+    }
+    
+    if llm is not None:
+        agent_config['llm'] = llm
+    
+    return Agent(**agent_config)
 
 
 def create_api_design_task_description(requirements: str, user_stories: str) -> str:

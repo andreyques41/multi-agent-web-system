@@ -14,7 +14,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool = True) -> Agent:
+def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
     """
     Create a Frontend Developer agent specialized in building
     modern, responsive user interfaces.
@@ -22,14 +22,15 @@ def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool 
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
+        llm: Language model to use (if None, will use default from environment)
         
     Returns:
         Agent: Configured Frontend Developer agent
     """
-    return Agent(
-        role='Senior Frontend Developer',
-        goal='Create beautiful, responsive, and user-friendly interfaces that work perfectly on all devices',
-        backstory="""You are a Senior Frontend Developer with 7+ years of experience 
+    agent_config = {
+        'role': 'Senior Frontend Developer',
+        'goal': 'Create beautiful, responsive, and user-friendly interfaces that work perfectly on all devices',
+        'backstory': """You are a Senior Frontend Developer with 7+ years of experience 
         creating modern web applications. You're proficient in React, Vue, and vanilla 
         JavaScript, and you have a keen eye for design and user experience.
         
@@ -62,12 +63,17 @@ def create_frontend_developer_agent(tools: Optional[List] = None, verbose: bool 
         - Mobile-first responsive design
         - Component-based architecture
         - Clean, maintainable code with proper comments""",
-        tools=tools or [],
-        verbose=verbose,
-        allow_delegation=False,
-        max_iter=20,
-        memory=True,
-    )
+        'tools': tools or [],
+        'verbose': verbose,
+        'allow_delegation': False,
+        'max_iter': 20,
+        'memory': True,
+    }
+    
+    if llm is not None:
+        agent_config['llm'] = llm
+    
+    return Agent(**agent_config)
 
 
 def create_ui_design_task_description(requirements: str, api_design: str) -> str:

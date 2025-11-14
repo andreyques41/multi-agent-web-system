@@ -15,7 +15,7 @@ from crewai import Agent
 from typing import List, Optional
 
 
-def create_qa_engineer_agent(tools: Optional[List] = None, verbose: bool = True) -> Agent:
+def create_qa_engineer_agent(tools: Optional[List] = None, verbose: bool = True, llm = None) -> Agent:
     """
     Create a QA Engineer agent specialized in ensuring
     code quality and comprehensive testing.
@@ -23,14 +23,15 @@ def create_qa_engineer_agent(tools: Optional[List] = None, verbose: bool = True)
     Args:
         tools: List of tools available to the agent
         verbose: Whether to show detailed output
+        llm: Language model to use (if None, will use default from environment)
         
     Returns:
         Agent: Configured QA Engineer agent
     """
-    return Agent(
-        role='Senior QA Engineer',
-        goal='Ensure the highest quality standards through comprehensive testing and quality assurance practices',
-        backstory="""You are a Senior QA Engineer with 6+ years of experience in 
+    agent_config = {
+        'role': 'Senior QA Engineer',
+        'goal': 'Ensure the highest quality standards through comprehensive testing and quality assurance practices',
+        'backstory': """You are a Senior QA Engineer with 6+ years of experience in 
         software quality assurance and test automation. You have a meticulous eye 
         for detail and a passion for ensuring software works flawlessly.
         
@@ -70,12 +71,17 @@ def create_qa_engineer_agent(tools: Optional[List] = None, verbose: bool = True)
         - Document bugs clearly with reproduction steps
         - Verify fixes before closing bugs
         - Maintain test suites as code evolves""",
-        tools=tools or [],
-        verbose=verbose,
-        allow_delegation=False,
-        max_iter=20,
-        memory=True,
-    )
+        'tools': tools or [],
+        'verbose': verbose,
+        'allow_delegation': False,
+        'max_iter': 20,
+        'memory': True,
+    }
+    
+    if llm is not None:
+        agent_config['llm'] = llm
+    
+    return Agent(**agent_config)
 
 
 def create_test_plan_task_description(requirements: str, backend_code: str, frontend_code: str) -> str:

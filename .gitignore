@@ -43,9 +43,6 @@ ENV/
 logs/
 
 # Output files
-output/
-*.output
-generated/
 
 # OS
 .DS_Store

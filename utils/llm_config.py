@@ -6,11 +6,16 @@ Uses your GitHub Personal Access Token with 'models' scope.
 """
 
 import os
+import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class LLMProvider:
@@ -122,11 +127,16 @@ def _build_github_config(model: str) -> Dict[str, Any]:
         "base_url": "https://models.inference.ai.azure.com",
         "api_key": github_token,
         "max_tokens": int(os.getenv("LLM_MAX_TOKENS", "4000")),
+        # Auto-retry on rate limit errors (429)
+        "max_retries": 5,  # Retry up to 5 times
+        "timeout": 120,     # 2 minute timeout per request
     }
     
     # Only add temperature if not an o-series model
     if model not in o_series_models:
         config["temperature"] = float(os.getenv("LLM_TEMPERATURE", "0.7"))
+    
+    logger.info(f"🔄 LLM configured with auto-retry: max_retries=5, timeout=120s for rate limit handling")
     
     return config
 

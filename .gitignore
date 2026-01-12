@@ -2,67 +2,32 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
 venv/
+.venv/
 env/
-ENV/
-.venv
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Environment variables
 .env
-.env.local
-.env.*.local
-
-# Logs
-*.log
-logs/
-
-# Output files
-
-# OS
-.DS_Store
-Thumbs.db
+*.egg-info/
+dist/
+build/
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
-.tox/
+coverage.xml
+*.cover
 
-# CrewAI specific
-.crewai/
-crew_output/
+# IDEs
+.vscode/
+.idea/
+*.swp
 
-# AI Models cache
-.cache/
-models/
+# OS
+.DS_Store
+Thumbs.db
 
-# Temporary files
-temp/
-tmp/
-*.tmp
+# Project-specific
+*.log
+logs/
+node_modules/

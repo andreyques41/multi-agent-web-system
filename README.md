@@ -2,7 +2,7 @@
 
 AI-powered development workflow using multi-agent orchestration for automated code generation and documentation.
 
-**Author**: [Andrey Quesada](https://github.com/andreyques41) | Software Engineer | Backend Systems & AI-Assisted Development
+**Author**: [Andrey Quesada](https://github.com/andreyques41) | Software Engineer | Full-Stack Development & AI Workflows
 
 ---
 

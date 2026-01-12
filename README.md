@@ -2,6 +2,7 @@
 
 > AI-powered automation for generating complete web projects using specialized agent teams
 
+[![Status](https://img.shields.io/badge/Status-In%20Development-blue.svg)]()
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![CrewAI](https://img.shields.io/badge/CrewAI-Framework-purple.svg)](https://crewai.com)
 [![GitHub Models](https://img.shields.io/badge/GitHub%20Models-API-black.svg)](https://github.com/marketplace/models)
@@ -9,6 +10,28 @@
 ## 📋 Overview
 
 A **multi-agent AI system** that orchestrates specialized agents to collaboratively generate complete web development projects. Built with CrewAI, this system demonstrates agent-based workflow automation, prompt engineering, and AI-assisted software development.
+
+---
+
+## 📊 Current Status
+
+This project is **actively being developed**. The core multi-agent orchestration system is functional and demonstrable.
+
+### ✅ Fully Working
+- Multi-agent crew orchestration with CrewAI
+- 6 specialized agents (PM, BA, Backend Dev, Frontend Dev, QA, DevOps)
+- Task sequencing and context passing between agents
+- Project file generation and scaffolding
+- Integration with GitHub Models API (Claude)
+- Custom tools for file operations and code generation
+
+### 🔄 In Progress
+- Enhanced error handling and recovery
+- Improved prompt engineering for output consistency
+- Additional specialized agents (Security, Database)
+- Web UI for task monitoring
+- Advanced context optimization
+- Production deployment patterns
 
 ### Problem Statement
 
